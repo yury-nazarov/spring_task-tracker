@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/task")
@@ -33,7 +34,11 @@ public class TaskController {
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable("id") Long id) {
         log.info("Called getTaskById: id = {}", id);
-        return ResponseEntity.ok(taskService.getTaskById(id));
+        try {
+            return ResponseEntity.ok(taskService.getTaskById(id));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @PostMapping
@@ -41,8 +46,12 @@ public class TaskController {
             @RequestBody Task task
     ){
         log.info("Called createTask");
-        // TODO
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(task));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
     }
 
     @PutMapping("/{id}")
@@ -51,8 +60,15 @@ public class TaskController {
             @RequestBody Task task
     ) {
         log.info("Called updateTask: id = {}", id);
-        // TODO
-        return ResponseEntity.ok().build();
+        try {
+            taskService.updateTask(id, task);
+            return ResponseEntity.ok().build();
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
     }
 
     @DeleteMapping("/{id}")
@@ -60,7 +76,7 @@ public class TaskController {
             @PathVariable Long id
     ) {
         log.info("Called deleteTask: id = {}", id);
-        // TODO
+        taskService.deleteTask(id);
         return ResponseEntity.ok().build();
     }
 

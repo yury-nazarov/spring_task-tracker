@@ -6,43 +6,21 @@ import homework.task_tracker.TaskStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TaskService {
-    public static final HashMap<Long, Task> taskStorage = new HashMap<>();
+    private final HashMap<Long, Task> taskStorage;
+    private final AtomicLong idCounter;
 
-    static {
-        taskStorage.put(1L, new Task(
-                1L,
-                100L,
-                1000L,
-                TaskStatus.CREATED,
-                LocalDate.now(),
-                LocalDate.now().plusDays(5),
-                TaskPriority.Low
-        ));
-        taskStorage.put(2L, new Task(
-                2L,
-                100L,
-                1001L,
-                TaskStatus.IN_PROGRESS,
-                LocalDate.now(),
-                LocalDate.now().plusDays(3),
-                TaskPriority.Medium
-        ));
-        taskStorage.put(3L, new Task(
-                3L,
-                1001L,
-                1000L,
-                TaskStatus.DONE,
-                LocalDate.now().minusDays(20),
-                LocalDate.now(),
-                TaskPriority.High
-        ));
+    public TaskService () {
+        this.taskStorage = new HashMap<>();
+        this.idCounter = new AtomicLong(); // потокобезопасный сторадж для счетчика
+    }
+
+    public List<Task> getAllTasks() {
+        return taskStorage.values().stream().toList();
     }
 
     public Task getTaskById(Long id) {
@@ -52,7 +30,55 @@ public class TaskService {
         return taskStorage.get(id);
     }
 
-    public List<Task> getAllTasks() {
-        return taskStorage.values().stream().toList();
+    public Task createTask(Task task) {
+        if (task.id() != null) {
+            throw new IllegalArgumentException("Task cant contain id");
+        }
+        if (task.status() != null) {
+            throw new IllegalArgumentException("Task cant contain status");
+        }
+        var newTask = new Task(
+                idCounter.incrementAndGet(),
+                task.creatorId(),
+                task.assignedUserId(),
+                TaskStatus.CREATED,
+                task.createDateTime(),
+                task.deadlineDate(),
+                task.priority()
+        );
+        taskStorage.put(newTask.id(), newTask);
+        return newTask;
+    }
+
+    public void updateTask(Long id, Task task) {
+        // нельзя редактировать таски со статусом DONE
+        // TODO: NullPointerException - если id не будет в БД
+        if (!taskStorage.containsKey(id)) {
+            throw new NoSuchElementException("Task id not found");
+        }
+
+        if (taskStorage.get(id).status() == TaskStatus.DONE
+                && task.status() == TaskStatus.DONE) {
+            throw new IllegalArgumentException("Task status cant be DONE");
+        }
+
+        var updatedTask = new Task(
+                id,
+                task.creatorId(),
+                task.assignedUserId(),
+                task.status(),
+                task.createDateTime(),
+                task.deadlineDate(),
+                task.priority()
+        );
+        taskStorage.put(id, updatedTask);
+        System.out.println(updatedTask);
+        System.out.println(taskStorage);
+        return;
+    }
+
+    public void deleteTask(Long id) {
+        taskStorage.remove(id);
+        return;
     }
 }
