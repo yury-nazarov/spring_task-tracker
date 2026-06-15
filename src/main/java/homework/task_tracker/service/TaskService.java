@@ -1,22 +1,24 @@
 package homework.task_tracker.service;
 
 import homework.task_tracker.Task;
-import homework.task_tracker.TaskPriority;
 import homework.task_tracker.TaskStatus;
+import homework.task_tracker.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TaskService {
+
+    private final TaskRepository repository;
     private final HashMap<Long, Task> taskStorage;
     private final AtomicLong idCounter;
 
-    public TaskService () {
+    public TaskService (TaskRepository repository) {
         this.taskStorage = new HashMap<>();
         this.idCounter = new AtomicLong(); // потокобезопасный сторадж для счетчика
+        this.repository = repository;
     }
 
     public List<Task> getAllTasks() {
