@@ -1,33 +1,36 @@
 package homework.task_tracker.service;
 
 import homework.task_tracker.Task;
-import homework.task_tracker.TaskPriority;
 import homework.task_tracker.TaskStatus;
+import homework.task_tracker.entity.TaskEntity;
+import homework.task_tracker.repository.TaskRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TaskService {
-    private final HashMap<Long, Task> taskStorage;
-    private final AtomicLong idCounter;
 
-    public TaskService () {
-        this.taskStorage = new HashMap<>();
-        this.idCounter = new AtomicLong(); // потокобезопасный сторадж для счетчика
+    private final TaskRepository repository;
+
+    public TaskService (TaskRepository repository) {
+        this.repository = repository;
     }
 
     public List<Task> getAllTasks() {
-        return taskStorage.values().stream().toList();
+        // Получаем из БД данные в виде Entity объектов
+        List<TaskEntity> items = repository.findAll();
+        // Конвертируем в DTO
+        List<Task> tasks = items.stream().map(item -> toDTO(item)).toList();
+        return tasks;
     }
 
     public Task getTaskById(Long id) {
-        if (!taskStorage.containsKey(id)) {
-            throw new NoSuchElementException("Not found task with id = " + id);
-        }
-        return taskStorage.get(id);
+        TaskEntity task = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Not found task with id = " + id));
+        return toDTO(task);
     }
 
     public Task createTask(Task task) {
@@ -37,8 +40,9 @@ public class TaskService {
         if (task.status() != null) {
             throw new IllegalArgumentException("Task cant contain status");
         }
-        var newTask = new Task(
-                idCounter.incrementAndGet(),
+
+        var newTask = new TaskEntity(
+                null,
                 task.creatorId(),
                 task.assignedUserId(),
                 TaskStatus.CREATED,
@@ -46,24 +50,22 @@ public class TaskService {
                 task.deadlineDate(),
                 task.priority()
         );
-        taskStorage.put(newTask.id(), newTask);
-        return newTask;
+
+        var taskEntity = repository.save(newTask);
+        return toDTO(taskEntity);
     }
 
     public void updateTask(Long id, Task task) {
-        // нельзя редактировать таски со статусом DONE
-        // TODO: NullPointerException - если id не будет в БД
-        if (!taskStorage.containsKey(id)) {
-            throw new NoSuchElementException("Task id not found");
-        }
+        TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task id not found" + id));
 
-        if (taskStorage.get(id).status() == TaskStatus.DONE
+        // нельзя редактировать таски со статусом DONE
+        if (taskEntity.getStatus() == TaskStatus.DONE
                 && task.status() == TaskStatus.DONE) {
             throw new IllegalArgumentException("Task status cant be DONE");
         }
-
-        var updatedTask = new Task(
-                id,
+        var updatedTask = new TaskEntity(
+                taskEntity.getId(), // Осталвяем оригинальный id
+                // остальные поля подставляем из запроса
                 task.creatorId(),
                 task.assignedUserId(),
                 task.status(),
@@ -71,14 +73,43 @@ public class TaskService {
                 task.deadlineDate(),
                 task.priority()
         );
-        taskStorage.put(id, updatedTask);
-        System.out.println(updatedTask);
-        System.out.println(taskStorage);
-        return;
+        // По id в Entity Hibernate самостоятельно определит запись, которую нужно обновить
+        repository.save(updatedTask);
     }
 
-    public void deleteTask(Long id) {
-        taskStorage.remove(id);
-        return;
+    @Transactional // выполняет метод, как одну атомарную операцию в БД
+    public void moveTaskToTrash(Long id) {
+        TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task id not found" + id));
+        taskEntity.setStatus(TaskStatus.TRASHED);
+        // repository.save(taskEntity); // Благодоря Transactional save() не нужен
+    }
+
+    // TBD: Вероятно это в будущем уедет в маппер
+    private Task toDTO(TaskEntity item) {
+        return new Task(
+                item.getId(),
+                item.getCreatorId(),
+                item.getAssignedUserId(),
+                item.getStatus(),
+                item.getCreateDateTime(),
+                item.getDeadlineDate(),
+                item.getPriority()
+        );
+    }
+
+    @Transactional
+    public void changeTaskStatus(Long id) {
+        TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task not found. id=" + id));
+
+        if (taskEntity.getAssignedUserId() == null) {
+            throw new IllegalArgumentException("Field getAssignedUserId must be set");
+        }
+
+        Long tasksByAssignUserId = repository.countTasksByAssignedUserId(taskEntity.getAssignedUserId());
+        if (tasksByAssignUserId >= 4) {
+            throw new IllegalArgumentException("To many task count per user. Task count = " + tasksByAssignUserId);
+        }
+        taskEntity.setStatus(TaskStatus.IN_PROGRESS);
     }
 }
+
