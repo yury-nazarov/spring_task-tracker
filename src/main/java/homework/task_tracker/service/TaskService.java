@@ -96,5 +96,20 @@ public class TaskService {
                 item.getPriority()
         );
     }
+
+    @Transactional
+    public void changeTaskStatus(Long id) {
+        TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task not found. id=" + id));
+
+        if (taskEntity.getAssignedUserId() == null) {
+            throw new IllegalArgumentException("Field getAssignedUserId must be set");
+        }
+
+        Long tasksByAssignUserId = repository.countTasksByAssignedUserId(taskEntity.getAssignedUserId());
+        if (tasksByAssignUserId >= 4) {
+            throw new IllegalArgumentException("To many task count per user. Task count = " + tasksByAssignUserId);
+        }
+        taskEntity.setStatus(TaskStatus.IN_PROGRESS);
+    }
 }
 
