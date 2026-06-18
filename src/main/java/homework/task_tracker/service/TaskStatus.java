@@ -1,4 +1,4 @@
-package homework.task_tracker;
+package homework.task_tracker.service;
 
 public enum TaskStatus {
     CREATED,

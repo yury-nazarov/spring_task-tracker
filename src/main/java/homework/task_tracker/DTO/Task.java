@@ -1,4 +1,7 @@
-package homework.task_tracker;
+package homework.task_tracker.DTO;
+
+import homework.task_tracker.service.TaskPriority;
+import homework.task_tracker.service.TaskStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

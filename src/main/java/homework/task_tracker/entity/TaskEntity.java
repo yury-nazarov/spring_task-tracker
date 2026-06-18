@@ -1,7 +1,7 @@
 package homework.task_tracker.entity;
 
-import homework.task_tracker.TaskPriority;
-import homework.task_tracker.TaskStatus;
+import homework.task_tracker.service.TaskPriority;
+import homework.task_tracker.service.TaskStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

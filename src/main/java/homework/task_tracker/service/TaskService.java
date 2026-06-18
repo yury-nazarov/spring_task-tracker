@@ -1,7 +1,6 @@
 package homework.task_tracker.service;
 
-import homework.task_tracker.Task;
-import homework.task_tracker.TaskStatus;
+import homework.task_tracker.DTO.Task;
 import homework.task_tracker.entity.TaskEntity;
 import homework.task_tracker.repository.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,7 +8,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TaskService {
