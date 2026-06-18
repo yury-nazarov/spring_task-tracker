@@ -3,6 +3,7 @@ package homework.task_tracker.controller;
 import homework.task_tracker.DTO.Task;
 import homework.task_tracker.service.TaskService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,9 @@ public class TaskController {
     private final TaskService taskService;
 
     @Autowired
-    public TaskController(TaskService taskService) {
+    public TaskController(
+            TaskService taskService
+    ) {
         this.taskService = taskService;
     }
 
@@ -32,7 +35,9 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable("id") Long id) {
+    public ResponseEntity<Task> getTaskById(
+            @PathVariable("id") Long id
+    ) {
         log.info("Called getTaskById: id = {}", id);
         try {
             return ResponseEntity.ok(taskService.getTaskById(id));
@@ -43,7 +48,7 @@ public class TaskController {
 
     @PostMapping
     public ResponseEntity<Task> createTask(
-            @RequestBody Task task
+            @RequestBody @Valid Task task
     ){
         log.info("Called createTask");
         try {
@@ -57,7 +62,7 @@ public class TaskController {
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask (
             @PathVariable Long id,
-            @RequestBody Task task
+            @RequestBody @Valid Task task
     ) {
         log.info("Called updateTask: id = {}", id);
         try {
@@ -96,8 +101,5 @@ public class TaskController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-
     }
-
-
 }
