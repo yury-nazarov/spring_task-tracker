@@ -39,11 +39,7 @@ public class TaskController {
             @PathVariable("id") Long id
     ) {
         log.info("Called getTaskById: id = {}", id);
-        try {
-            return ResponseEntity.ok(taskService.getTaskById(id));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
     @PostMapping
@@ -51,12 +47,7 @@ public class TaskController {
             @RequestBody @Valid Task task
     ){
         log.info("Called createTask");
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(task));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(task));
     }
 
     @PutMapping("/{id}")
@@ -65,14 +56,8 @@ public class TaskController {
             @RequestBody @Valid Task task
     ) {
         log.info("Called updateTask: id = {}", id);
-        try {
-            taskService.updateTask(id, task);
-            return ResponseEntity.ok().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        taskService.updateTask(id, task);
+        return ResponseEntity.ok().build();
 
     }
 
@@ -81,12 +66,7 @@ public class TaskController {
             @PathVariable Long id
     ) {
         log.info("Called trashTask: id = {}", id);
-        try {
-            taskService.moveTaskToTrash(id);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
+        taskService.moveTaskToTrash(id);
         return ResponseEntity.ok().build();
     }
 
@@ -95,11 +75,7 @@ public class TaskController {
             @PathVariable Long id
     ){
         log.info("Called changeTaskStatus with id = {}", id);
-        try {
-            taskService.changeTaskStatus(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        taskService.changeTaskStatus(id);
+        return ResponseEntity.ok().build();
     }
 }
