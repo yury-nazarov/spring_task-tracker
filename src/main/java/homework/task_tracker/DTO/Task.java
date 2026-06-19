@@ -2,6 +2,7 @@ package homework.task_tracker.DTO;
 
 import homework.task_tracker.service.TaskPriority;
 import homework.task_tracker.service.TaskStatus;
+import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -15,12 +16,13 @@ public record Task (
         @NotNull
         Long creatorId,
         Long assignedUserId,
-        @NotNull
         TaskStatus status,
         @FutureOrPresent
         LocalDateTime createDateTime, // ISO-8601
-        @FutureOrPresent
+        @Future
         LocalDate deadlineDate,
+        @Future
+        LocalDateTime doneDateTime,
         @NotNull
         TaskPriority priority
 ) {}

@@ -61,8 +61,8 @@ public class TaskController {
 
     }
 
-    @PutMapping("/{id}/trash")
-    public ResponseEntity<Void> trashTask (
+    @PostMapping("/{id}/trash")
+    public ResponseEntity<Void> trashStatusTask (
             @PathVariable Long id
     ) {
         log.info("Called trashTask: id = {}", id);
@@ -71,11 +71,20 @@ public class TaskController {
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity<Void> changeTaskStatus(
+    public ResponseEntity<Void> taskStatusInProgress(
             @PathVariable Long id
     ){
-        log.info("Called changeTaskStatus with id = {}", id);
-        taskService.changeTaskStatus(id);
+        log.info("Called taskStatusInProgress with id = {}", id);
+        taskService.moveTaskStatusInProgress(id);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<Void> taskStatusDone(
+            @PathVariable Long id
+    ) {
+        log.info("Called taskStatusDone with id = {}", id);
+        taskService.moveTaskStatusToDone(id);
         return ResponseEntity.ok().build();
     }
 }
