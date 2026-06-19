@@ -1,7 +1,7 @@
 package homework.task_tracker.entity;
 
-import homework.task_tracker.TaskPriority;
-import homework.task_tracker.TaskStatus;
+import homework.task_tracker.service.TaskPriority;
+import homework.task_tracker.service.TaskStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -24,11 +24,14 @@ public class TaskEntity {
     @Column(name = "task_status")
     private TaskStatus status;
 
-    @Column(name = "local_date_time")
+    @Column(name = "create_date_time")
     private LocalDateTime createDateTime; // ISO-8601
 
-    @Column(name = "local_date")
+    @Column(name = "deadline_date")
     private LocalDate deadlineDate;
+
+    @Column(name = "done_date_time")
+    private LocalDateTime doneDateTime;
 
     @Column(name = "task_priority")
     private TaskPriority priority;
@@ -36,13 +39,14 @@ public class TaskEntity {
     public TaskEntity() {
     }
 
-    public TaskEntity(Long id, Long creatorId, Long assignedUserId, TaskStatus status, LocalDateTime createDateTime, LocalDate deadlineDate, TaskPriority priority) {
+    public TaskEntity(Long id, Long creatorId, Long assignedUserId, TaskStatus status, LocalDateTime createDateTime, LocalDate deadlineDate, LocalDateTime doneDateTime, TaskPriority priority) {
         this.id = id;
         this.creatorId = creatorId;
         this.assignedUserId = assignedUserId;
         this.status = status;
         this.createDateTime = createDateTime;
         this.deadlineDate = deadlineDate;
+        this.doneDateTime = doneDateTime;
         this.priority = priority;
     }
 
@@ -100,5 +104,13 @@ public class TaskEntity {
 
     public void setPriority(TaskPriority priority) {
         this.priority = priority;
+    }
+
+    public LocalDateTime getDoneDateTime() {
+        return doneDateTime;
+    }
+
+    public void setDoneDateTime(LocalDateTime doneDateTime) {
+        this.doneDateTime = doneDateTime;
     }
 }

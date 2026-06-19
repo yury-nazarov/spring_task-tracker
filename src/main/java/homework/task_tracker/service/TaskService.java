@@ -1,7 +1,6 @@
 package homework.task_tracker.service;
 
-import homework.task_tracker.Task;
-import homework.task_tracker.TaskStatus;
+import homework.task_tracker.DTO.Task;
 import homework.task_tracker.entity.TaskEntity;
 import homework.task_tracker.repository.TaskRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,7 +8,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class TaskService {
@@ -48,6 +46,7 @@ public class TaskService {
                 TaskStatus.CREATED,
                 task.createDateTime(),
                 task.deadlineDate(),
+                task.doneDateTime(),
                 task.priority()
         );
 
@@ -71,6 +70,7 @@ public class TaskService {
                 task.status(),
                 task.createDateTime(),
                 task.deadlineDate(),
+                task.doneDateTime(),
                 task.priority()
         );
         // По id в Entity Hibernate самостоятельно определит запись, которую нужно обновить
@@ -93,12 +93,13 @@ public class TaskService {
                 item.getStatus(),
                 item.getCreateDateTime(),
                 item.getDeadlineDate(),
+                item.getDoneDateTime(),
                 item.getPriority()
         );
     }
 
     @Transactional
-    public void changeTaskStatus(Long id) {
+    public void moveTaskStatusInProgress(Long id) {
         TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task not found. id=" + id));
 
         if (taskEntity.getAssignedUserId() == null) {
@@ -110,6 +111,21 @@ public class TaskService {
             throw new IllegalArgumentException("To many task count per user. Task count = " + tasksByAssignUserId);
         }
         taskEntity.setStatus(TaskStatus.IN_PROGRESS);
+    }
+
+    @Transactional
+    public void moveTaskStatusToDone(Long id) {
+        TaskEntity taskEntity = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Task not found. id=" + id));
+
+        if (taskEntity.getAssignedUserId() == null) {
+            throw new IllegalArgumentException("Field AssignedUserId must be set");
+        }
+
+        if (taskEntity.getDeadlineDate() == null) {
+            throw new IllegalArgumentException("Field DeadlineDate must be set");
+        }
+
+        taskEntity.setStatus(TaskStatus.DONE);
     }
 }
 

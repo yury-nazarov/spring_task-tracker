@@ -1,18 +1,17 @@
 package homework.task_tracker.controller;
 
-import homework.task_tracker.Task;
+import homework.task_tracker.DTO.Task;
 import homework.task_tracker.service.TaskService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/task")
@@ -23,7 +22,9 @@ public class TaskController {
     private final TaskService taskService;
 
     @Autowired
-    public TaskController(TaskService taskService) {
+    public TaskController(
+            TaskService taskService
+    ) {
         this.taskService = taskService;
     }
 
@@ -34,72 +35,56 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Task> getTaskById(@PathVariable("id") Long id) {
+    public ResponseEntity<Task> getTaskById(
+            @PathVariable("id") Long id
+    ) {
         log.info("Called getTaskById: id = {}", id);
-        try {
-            return ResponseEntity.ok(taskService.getTaskById(id));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
     @PostMapping
     public ResponseEntity<Task> createTask(
-            @RequestBody Task task
+            @RequestBody @Valid Task task
     ){
         log.info("Called createTask");
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(task));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.createTask(task));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask (
             @PathVariable Long id,
-            @RequestBody Task task
+            @RequestBody @Valid Task task
     ) {
         log.info("Called updateTask: id = {}", id);
-        try {
-            taskService.updateTask(id, task);
-            return ResponseEntity.ok().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
+        taskService.updateTask(id, task);
+        return ResponseEntity.ok().build();
 
     }
 
-    @PutMapping("/{id}/trash")
-    public ResponseEntity<Void> trashTask (
+    @PostMapping("/{id}/trash")
+    public ResponseEntity<Void> trashStatusTask (
             @PathVariable Long id
     ) {
         log.info("Called trashTask: id = {}", id);
-        try {
-            taskService.moveTaskToTrash(id);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
+        taskService.moveTaskToTrash(id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/start")
-    public ResponseEntity<Void> changeTaskStatus(
+    public ResponseEntity<Void> taskStatusInProgress(
             @PathVariable Long id
     ){
-        log.info("Called changeTaskStatus with id = {}", id);
-        try {
-            taskService.changeTaskStatus(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
-
+        log.info("Called taskStatusInProgress with id = {}", id);
+        taskService.moveTaskStatusInProgress(id);
+        return ResponseEntity.ok().build();
     }
 
-
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<Void> taskStatusDone(
+            @PathVariable Long id
+    ) {
+        log.info("Called taskStatusDone with id = {}", id);
+        taskService.moveTaskStatusToDone(id);
+        return ResponseEntity.ok().build();
+    }
 }
